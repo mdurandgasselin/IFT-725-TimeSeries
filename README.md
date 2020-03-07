@@ -1,2 +1,3 @@
-# TimeSeries_causalNet
-Pytorch Implementation of SeriesNet from Krist Papadopoulos (tf)
+# IFT 725 TimeSeries
+
+Pytorch Implementation of SeriesNet originally made in tf by Krist Papadopoulos (tf)

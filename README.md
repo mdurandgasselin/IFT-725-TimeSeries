@@ -4,4 +4,5 @@ Pytorch Implementation of SeriesNet originally made in tf by Krist Papadopoulos 
 
 Modification avant pull
 depuis la machine
+Sur la branch parame-model: modif
 

@@ -15,7 +15,7 @@ class seriesNet(nn.Module):
     def __init__(self, in_channels, out_channels, gate_nb_filter=32 ):
         super(seriesNet, self).__init__()
         # 1 input image channel, 6 output channels, 3x3 square convolution
-        # kernel
+        # kernel parametrisation
         #self.batch_norm_data = nn.BatchNorm1d(in_channels)
         self.gated_block1 = gated_block(in_channels, gate_nb_filter, dilation=1 )
         self.gated_block2 = gated_block(in_channels, gate_nb_filter, dilation=2 )

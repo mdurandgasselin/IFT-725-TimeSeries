@@ -12,45 +12,37 @@ import torch.nn.functional as F
 
 class seriesNet(nn.Module):
 
-    def __init__(self, in_channels, out_channels, gate_nb_filter=32 ):
-        super(seriesNet, self).__init__()
-        # 1 input image channel, 6 output channels, 3x3 square convolution
-        # kernel
-        #self.batch_norm_data = nn.BatchNorm1d(in_channels)
-        self.gated_block1 = gated_block(in_channels, gate_nb_filter, dilation=1 )
-        self.gated_block2 = gated_block(in_channels, gate_nb_filter, dilation=2 )
-        self.gated_block3 = gated_block(in_channels, gate_nb_filter, dilation=4 )
-        self.gated_block4 = gated_block(in_channels, gate_nb_filter, dilation=8 )
-        self.gated_block5 = gated_block(in_channels, gate_nb_filter, dilation=16 )
-        
-        self.gated_block6 = gated_block(in_channels, gate_nb_filter, dilation=32)
-        self.drop_1 = nn.Dropout(p=0.35)
-        self.gated_block7 = gated_block(in_channels, gate_nb_filter, dilation=64 )
-        self.drop_2 = nn.Dropout(p=0.35)
-        
-        self.conv_final = nn.Conv1d(in_channels=in_channels, out_channels=in_channels,
-                              kernel_size= 1, stride=1, padding=0, bias=False)
-        
+    def __init__(self, in_channels, out_channels, nb_causal_block=7,
+                     gate_nb_filter=32, nb_block_dropped=2, dropout_rate=0.7):
+            super(seriesNet, self).__init__()
+
+            assert nb_block_dropped < nb_causal_block
+
+            self.nb_block = nb_causal_block
+            self.nb_block_dropped = nb_block_dropped
+            # self.batch_norm_data = nn.BatchNorm1d(in_channels)
+            self.module_block = nn.ModuleList()
+            for i in range(self.nb_block):
+                self.module_block.append(gated_block(in_channels, gate_nb_filter, dilation=2 ** i))  #
+
+            self.drop_layer = nn.ModuleList()
+            for j in range(self.nb_block_dropped):
+                self.drop_layer.append(nn.Dropout(p=dropout_rate))
+
+            self.conv_final = nn.Conv1d(in_channels=in_channels, out_channels=in_channels,
+                                        kernel_size=1, stride=1, padding=0, bias=False)
 
     def forward(self, x):
         
-        #x = self.batch_norm_data(x)
-        x, skip1 = self.gated_block1(x)
-        x, skip2 = self.gated_block2(x) 
-        x, skip3 = self.gated_block3(x)
-        x, skip4 = self.gated_block4(x)
-        x, skip5 = self.gated_block5(x)
-        x, skip6 = self.gated_block6(x)
-        
-        skip6 = self.drop_1(skip6) #dropout used to limit influence of earlier data
-        
-        x, skip7 = self.gated_block6(x)
-        skip7 = self.drop_2(skip7) #dropout used to limit influence of earlier data
+        output = torch.zeros_like(x)
+        for i in range(self.nb_block):
+            x, skip = self.module_block[i](x)
+            if i >= (self.nb_block - self.nb_block_dropped):
+                skip = self.drop_layer[i - (self.nb_block - self.nb_block_dropped)](skip)
+            output += skip
 
-        output =   skip1 + skip2 + skip3 + skip4 + skip5 + skip6 + skip7
-        
-        output =   F.relu(output)
-        
+        output = F.relu(output)
+
         output = self.conv_final(output)
         
         return output
@@ -64,10 +56,6 @@ class gated_block(nn.Module):
         
         self.pad_input = nn.ReflectionPad1d((dilation, 0))
         
-        #self.batch_N_lay_out = nn.BatchNorm1d(nb_filter)
-
-        #self.batch_N_skipout = nn.BatchNorm1d(in_channels)
-                  
         self.conv = nn.Conv1d(in_channels=in_channels, out_channels=nb_filter,
                               kernel_size= 2, stride=1, padding=0,
                               dilation=dilation, bias=False, padding_mode='reflect')
@@ -84,7 +72,6 @@ class gated_block(nn.Module):
                 
         residual = x
         
-        #x = F.selu(self.batch_N_lay_out(self.conv(self.pad_input(x))))
         x = F.selu(self.conv(self.pad_input(x)))
         
         skip = self.skipout(x)
@@ -95,7 +82,3 @@ class gated_block(nn.Module):
         return layer_out, skip
     
 
-#m = nn.Conv1d(6, 33, 3, stride=1,padding=0, padding_mode='replicate')
-#input = torch.randn(20, 6, 1223)
-#output = m(input)
-#print(output.size())

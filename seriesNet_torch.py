@@ -12,18 +12,18 @@ import torch.nn.functional as F
 
 class seriesNet(nn.Module):
 
-    def __init__(self, in_channels, out_channels, nb_causal_block=7,
-                     gate_nb_filter=32, nb_block_dropped=2, dropout_rate=0.7):
+    def __init__(self, in_channels,  nb_causal_block=7, gate_nb_filter=32,
+                            nb_block_dropped=2, dropout_rate=0.7):
             super(seriesNet, self).__init__()
 
             assert nb_block_dropped < nb_causal_block
 
             self.nb_block = nb_causal_block
             self.nb_block_dropped = nb_block_dropped
-            # self.batch_norm_data = nn.BatchNorm1d(in_channels)
+
             self.module_block = nn.ModuleList()
             for i in range(self.nb_block):
-                self.module_block.append(gated_block(in_channels, gate_nb_filter, dilation=2 ** i))  #
+                self.module_block.append(gated_block(in_channels, gate_nb_filter, dilation=2 ** i))
 
             self.drop_layer = nn.ModuleList()
             for j in range(self.nb_block_dropped):
@@ -51,9 +51,8 @@ class seriesNet(nn.Module):
 
 class gated_block(nn.Module):
     # Param : nb_filter, filter_length, dilation, l2_layer_reg
-    def __init__(self, in_channels, nb_filter, dilation=1 ):
+    def __init__(self, in_channels, nb_filter, dilation=1):
         super(gated_block, self).__init__()
-        
         self.pad_input = nn.ReflectionPad1d((dilation, 0))
         
         self.conv = nn.Conv1d(in_channels=in_channels, out_channels=nb_filter,
@@ -71,9 +70,7 @@ class gated_block(nn.Module):
     def forward(self, x):
                 
         residual = x
-        
         x = F.selu(self.conv(self.pad_input(x)))
-        
         skip = self.skipout(x)
         net_in = self.network_in(x)
         

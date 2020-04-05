@@ -2,8 +2,8 @@
 
 Pytorch Implementation of SeriesNet originally made in tf by Krist Papadopoulos (tf)
 
-Modification avant pull
-depuis la machine
-Sur la branch parame-model: modif
+Task :
+Parametrization of the time series Model
+prediction workflow
+training workflow
 
-modif sur master et pas dans branch

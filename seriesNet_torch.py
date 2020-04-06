@@ -8,6 +8,7 @@ Created on Sun Feb 16 08:19:14 2020
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 
 class seriesNet(nn.Module):
@@ -18,6 +19,7 @@ class seriesNet(nn.Module):
 
             assert nb_block_dropped < nb_causal_block
 
+            self.pts_need_for_pred = int(np.sum((2*np.ones(nb_causal_block)) ** np.arange(nb_causal_block)) +1)
             self.nb_block = nb_causal_block
             self.nb_block_dropped = nb_block_dropped
 
@@ -46,6 +48,9 @@ class seriesNet(nn.Module):
         output = self.conv_final(output)
         
         return output
+
+    def get_pts_for_Pred(self):
+        return self.pts_need_for_pred
 
 
 

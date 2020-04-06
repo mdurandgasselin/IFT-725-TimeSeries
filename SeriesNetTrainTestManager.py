@@ -55,7 +55,8 @@ class TrainTestManager(object):
 
 
     def pretrain(self, num_epochs, pts_2pred):
-        """ Pre_entrainement du model sur les derniers points de toute les courbe du dataset d'entrainement.   """
+        """ Pre_entrainement du model sur les derniers points de toute les courbe du dataset d'entrainement.
+        On essaye de capturer la tendance de toute les courbes pour les  pts_2pred de la fin  """
         self.metrics['Training_Loss'] = []
         self.metrics['Testing_Loss'] = []
         batch_size = 10
@@ -64,53 +65,56 @@ class TrainTestManager(object):
 
         P = pts_2pred
         C, L = self.dataset_train[0].size()
-        #print(L)
-        #start = self.model.get_pts_for_Pred()
-        ##print(L - P - start)
+
         for epoch in range(num_epochs):
             print("Epoch: {} of {}".format(epoch + 1, num_epochs))
             train_losses = []
             for i, batch in enumerate(train_loader):
-                data, target = batch[:, :, :-1], batch[:, :, -P:]
-                _,__, end= data.size()
+                data, target = batch[:, :, :], batch[:, :, -P:]
                 losses = []
                 for k in range(P):
                     #pred = torch.zeros(10, 5, 1)
                     #input_data = inputModel[:, :, :L -P]
-                    output = self.model(data[:,:,:end-P+k])
+                    output = self.model(data[:,:,:-P+k])
                     cible = target[:, :, k]
-                    # output = myModel(X[:,:,i:start+i])
-                    # print(pred.size())
                     self.optimizer.zero_grad()
                     # On calcul la loss par rapport a la derniere prediction
                     loss = self.criterion(output[:, :, -1], cible)
                     loss.backward()
                     self.optimizer.step()
                     losses.append(loss.item())
-                train_losses.append(np.mean(losses))
-            self.metrics['Training_Loss'].append(np.mean(train_losses))
+
+                train_losses.append(np.array(losses))
+            abc=np.array(train_losses)
+            self.metrics['Training_Loss'].append(np.mean(abc,axis=0))
 
             self.model.eval()
             with torch.no_grad():
                 loss_test = []
                 for i, batch in enumerate(test_loader):
-                    data, target = batch[:, :, :-1], batch[:, :, -P:]
+                    data, target = batch, batch[:, :, -P:]
                     #input_data = X[:, :, i:start + i]
                     pred=torch.zeros(batch_size, 5, 1)
+                    losses = []
                     for p in range(P):
-                        input_data = self.model(data[:,:,:L-P +p])
-                        pred = torch.cat((pred, input_data[:, :, -1].view(batch_size, 5, 1)), 2)
+                        input_data = self.model(data[:,:,:-P +p])
+                        loss = self.criterion(input_data[:, :, -1], target[:, :, p])
+                        #pred = torch.cat((pred, input_data[:, :, -1].view(batch_size, 5, 1)), 2)
+                        losses.append(loss.item())
                     # On calcul la loss par rapport a la derniere prediction
-                    loss = self.criterion(pred[:, :, 1:], target)
-                    loss_test.append(loss.item())
-            self.metrics['Testing_Loss'].append(np.mean(loss_test))
+                    #loss = self.criterion(pred[:, :, 1:], target)
+                    loss_test.append(np.array(losses))
+            abc=np.array(loss_test)
+            self.metrics['Testing_Loss'].append(np.mean(loss_test,axis=0))
             self.model.train()
         #save model to pretrained file
         self.pre_trained_model.load_state_dict(copy.deepcopy(self.model.state_dict()))
-
+        self.plot_preTrain_metrics()
 
     def train(self, epochs, data_index, pts_2pred = 10):
         """ Strategie ou on part d'un modèle entrainé et on entraine ce modèle sur les données d'une actions"""
+        self.metrics['Training_Loss'] = []
+        self.metrics['Testing_Loss'] = []
 
         #stockNb = random.randint(0, 399)
         self.model.load_state_dict(copy.deepcopy(self.pre_trained_model.state_dict()))
@@ -141,19 +145,23 @@ class TrainTestManager(object):
                 loss.backward()
                 self.optimizer.step()
                 train_losses.append(loss.item())
-            self.metrics['Training_Loss'].append(np.mean(train_losses))
+            self.metrics['Training_Loss'].append(np.array(train_losses))
 
             self.model.eval()
             prediction = torch.zeros(1, 5, 1)
             with torch.no_grad():
-                input_data = data
+                input_data = data[:,:,:-P]
+                targets = data[:,:,-P:]
+                loss_test = []
                 for i in range(P):
-                    input_data = self.model(input_data)
-                    prediction = torch.cat((prediction, input_data[:, :, -1].view(1, C, 1)), 2)
-                loss_eval = self.criterion(prediction[:,:,1:], data[:,:,L-P:])
-                self.metrics['Testing_Loss'].append(loss_eval.item())
+                    output = self.model(input_data)
+                    input_data = torch.cat((input_data,output[:,:,-1].view(1, C, 1)),2)
+                    #prediction = torch.cat((prediction, input_data[:, :, -1].view(1, C, 1)), 2)
+                    loss_eval = self.criterion(output[:,:,-1].view(1,C,1), targets[:,:,i].view(1,C,1))
+                    loss_test.append(loss_eval.item())
+                self.metrics['Testing_Loss'].append(np.array(loss_test))
             self.model.train()
-
+        self.plot_Train_metrics()
 
     def plot_metrics(self):
         print(len(self.metrics['Training_Loss']))
@@ -170,6 +178,45 @@ class TrainTestManager(object):
 
         #f.savefig(figname + '.png')
         plt.show()
+
+    def plot_Train_metrics(self):
+        train_loss = np.array(self.metrics['Testing_Loss'])
+        test_loss = np.array(self.metrics['Training_Loss'])
+        epochs = train_loss.shape[0]
+        xAxis_train = np.arange(train_loss.shape[1])
+        xAxis_test = np.arange(test_loss.shape[1])
+        plt.figure()
+        plt.subplot(2, 1, 1)
+        for epoch in range(epochs):
+            plt.plot(xAxis_train, train_loss[epoch], label='epoch {}'.format(epoch + 1))
+        plt.xlabel('Number ')
+        plt.ylabel('Training loss')
+        plt.legend()
+        plt.subplot(2, 1, 2)
+        for epoch in range(epochs):
+            plt.plot(xAxis_test,  test_loss[epoch], label='epoch {}'.format(epoch + 1))
+        plt.xlabel('Epoch')
+        plt.ylabel('Testing loss')
+        plt.legend()
+
+    def plot_preTrain_metrics(self):
+        train_loss = np.array(self.metrics['Training_Loss'])
+        test_loss = np.array(self.metrics['Testing_Loss'])
+        epochs = train_loss.shape[0]
+        xAxis = np.arange(train_loss.shape[1])
+        plt.figure()
+        plt.subplot(2,1,1)
+        for epoch in range(epochs):
+            plt.plot(xAxis, train_loss[epoch], label='epoch {}'.format(epoch+1))
+        plt.xlabel('Epoch')
+        plt.ylabel('Training loss')
+        plt.legend()
+        plt.subplot(2,1,2)
+        for epoch in range(epochs):
+            plt.plot(xAxis, test_loss[epoch], label='epoch {}'.format(epoch + 1))
+        plt.xlabel('Epoch')
+        plt.ylabel('Testing loss')
+        plt.legend()
 
     def plot_prediction(self, data_index, axes, pts_2pred = 10):
         P = pts_2pred

@@ -19,37 +19,36 @@ class TrainTestManager(object):
                  testset,
                  lr=0.001,
                  loss_fn = 'MeanSquared',
-                 optimizer='sgd',
+                 optimizer_type='sgd',
                  batch_size=1):
 
         self.model = models[0]
         self.pre_trained_model = models[1]
         self.lr = lr
-        self.optimizer = optimizer
+        self.optimizer_type = optimizer_type
+        self.optimizer = None
         self.batch_size= batch_size
         #self.train_loader = DataLoader(trainset, batch_size=batch_size, shuffle=True, drop_last=False)
         #self.test_loader = DataLoader(testset, batch_size=batch_size, shuffle=True, drop_last=False)
         self.dataset_train = trainset
         self.dataset_test = testset
         self._init_loss(loss_fn)
-        self._init_optim(self.optimizer, self.lr)
+        self._init_optim()
         self.metrics = {}
         self.metrics['Training_Loss'] = []
         self.metrics['Testing_Loss'] = []
 
-
-
-    def _init_optim(self, optimizer, lr):
-        if optimizer == 'sgd' or optimizer == 'SGD':
-            self.optimizer= optim.SGD(self.model.parameters(), lr=lr, weight_decay=0.01)
-        elif optimizer == 'Adam' or optimizer == 'adam':
-            self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+    def _init_optim(self):
+        if self.optimizer_type == 'sgd' or self.optimizer_type == 'SGD':
+            self.optimizer= optim.SGD(self.model.parameters(), lr=self.lr, weight_decay=0.01)
+        elif self.optimizer_type  == 'Adam' or self.optimizer_type  == 'adam':
+            self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
     def _init_loss(self, loss):
         """
         :type loss: str
         """
-        if loss == 'MeanSquared' or optimizer == 'MSE':
+        if loss == 'MeanSquared' or loss == 'MSE':
             self.criterion = nn.MSELoss()
 
 
@@ -118,7 +117,7 @@ class TrainTestManager(object):
 
         #stockNb = random.randint(0, 399)
         self.model.load_state_dict(copy.deepcopy(self.pre_trained_model.state_dict()))
-        self._init_optim(self.optimizer,self.lr)
+        self._init_optim()
         P = pts_2pred
         print(type(P))
         ind = data_index
@@ -129,7 +128,7 @@ class TrainTestManager(object):
         print(start)
         #print(L - P - start)
         epoch = 0
-        data = self.dataset_train[ind].view(1,5,-1)
+        data = self.dataset_train[ind].view(1,C,-1)
         for _ in tqdm(range(epochs)):
             print("Epoch: {} of {}".format(epoch + 1, epochs))
             epoch+=1
@@ -148,7 +147,58 @@ class TrainTestManager(object):
             self.metrics['Training_Loss'].append(np.array(train_losses))
 
             self.model.eval()
-            prediction = torch.zeros(1, 5, 1)
+            prediction = torch.zeros(1, C, 1)
+            with torch.no_grad():
+                input_data = data[:,:,:-P]
+                targets = data[:,:,-P:]
+                loss_test = []
+                for i in range(P):
+                    output = self.model(input_data)
+                    input_data = torch.cat((input_data,output[:,:,-1].view(1, C, 1)),2)
+                    #prediction = torch.cat((prediction, input_data[:, :, -1].view(1, C, 1)), 2)
+                    loss_eval = self.criterion(output[:,:,-1].view(1,C,1), targets[:,:,i].view(1,C,1))
+                    loss_test.append(loss_eval.item())
+                self.metrics['Testing_Loss'].append(np.array(loss_test))
+            self.model.train()
+        self.plot_Train_metrics()
+
+    def train_1company(self, epochs, data_index, pts_2pred = 10):
+        """ Strategie ou on part d'un modèle entrainé et on entraine ce modèle sur les données d'une actions"""
+        self.metrics['Training_Loss'] = []
+        self.metrics['Testing_Loss'] = []
+
+        #stockNb = random.randint(0, 399)
+        #self.model.load_state_dict(copy.deepcopy(self.pre_trained_model.state_dict()))
+        #self._init_optim(self.optimizer,self.lr)
+        P = pts_2pred
+        print(type(P))
+        ind = data_index
+
+        C, L = self.dataset_train[ind].size()
+        print(type(C), type(L))
+        start = self.model.get_pts_for_Pred()
+        print(start)
+        epoch = 0
+        data = self.dataset_train[ind].view(1,C,-1)
+        for _ in tqdm(range(epochs)):
+            print("Epoch: {} of {}".format(epoch + 1, epochs))
+            epoch+=1
+            train_losses = []
+            for k in range(L - P - start):
+                #pred = torch.zeros(10, 5, 1)
+                input_data = data[:, :, k:start + k]
+                output = self.model(input_data)
+                cible = data[:, :, start + k ].view(1,C,1)
+                self.optimizer.zero_grad()
+                # On calcul la loss par rapport a la derniere prediction
+                loss = self.criterion(output[:, :, -1].view(1,C,1), cible)
+                loss.backward()
+                self.optimizer.step()
+                train_losses.append(loss.item())
+            self.metrics['Training_Loss'].append(np.array(train_losses))
+
+            self.model.eval()
+            prediction = torch.zeros(1, C, 1)
             with torch.no_grad():
                 input_data = data[:,:,:-P]
                 targets = data[:,:,-P:]
@@ -180,8 +230,8 @@ class TrainTestManager(object):
         plt.show()
 
     def plot_Train_metrics(self):
-        train_loss = np.array(self.metrics['Testing_Loss'])
-        test_loss = np.array(self.metrics['Training_Loss'])
+        train_loss = np.array(self.metrics['Training_Loss'])
+        test_loss = np.array(self.metrics['Testing_Loss'])
         epochs = train_loss.shape[0]
         xAxis_train = np.arange(train_loss.shape[1])
         xAxis_test = np.arange(test_loss.shape[1])
@@ -222,12 +272,12 @@ class TrainTestManager(object):
         P = pts_2pred
         ind = data_index
         C, L = self.dataset_train[ind].size()
-        data = self.dataset_train[ind].view(1,5,-1)
-        cible = data[:, :, L-P:].view(5,-1).detach().numpy()
+        data = self.dataset_train[ind].view(1,C,-1)
+        cible = data[:, :, L-P:].view(C,-1).detach().numpy()
         print(cible.shape)
         self.model.eval()
 
-        prediction = torch.zeros(1, 5, 1)
+        prediction = torch.zeros(1, C, 1)
         with torch.no_grad():
             input_data = data[:,:,:L-P]
             for i in range(P):

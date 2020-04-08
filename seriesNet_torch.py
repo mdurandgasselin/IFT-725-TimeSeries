@@ -32,7 +32,7 @@ class seriesNet(nn.Module):
                 self.drop_layer.append(nn.Dropout(p=dropout_rate))
 
             self.conv_final = nn.Conv1d(in_channels=in_channels, out_channels=in_channels,
-                                        kernel_size=1, stride=1, padding=0, bias=False)
+                                        kernel_size=1, stride=1, padding=0, bias=True)
 
     def forward(self, x):
         
@@ -62,15 +62,15 @@ class gated_block(nn.Module):
         
         self.conv = nn.Conv1d(in_channels=in_channels, out_channels=nb_filter,
                               kernel_size= 2, stride=1, padding=0,
-                              dilation=dilation, bias=False, padding_mode='reflect')
+                              dilation=dilation, bias=True, padding_mode='reflect')
         
         self.network_in = nn.Conv1d(in_channels=nb_filter, out_channels=in_channels, kernel_size= 1,
                                     stride=1, padding=0, dilation=1, groups=1,
-                                    bias=False)
+                                    bias=True)
         
         self.skipout = nn.Conv1d(in_channels=nb_filter, out_channels=in_channels,
                                  kernel_size= 1, stride=1, padding=0, dilation=1,
-                                 bias=False)
+                                 bias=True)
     
     def forward(self, x):
                 

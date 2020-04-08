@@ -18,7 +18,7 @@ class DataUtils:
         self.data = None
 
         if system() == 'Linux':
-            self.path = "dataset/sandp500/all_stocks_5yr.csv"
+            self.path = "../dataset/sandp500/all_stocks_5yr.csv"
 
     def read_data(self):
 
@@ -66,8 +66,9 @@ class DataUtils:
 
         return train_loader, validation_loader
     """
-
+"""
 data_utils = DataUtils()
 data_utils.read_data()
 features, target = data_utils.get_features_target()
 print(features.size())
+"""

@@ -76,7 +76,8 @@ class ActionDataset(Dataset):
 
 
 def create_sliding_dataset(pts_window, pts_2_pred = 10,
-                           root_dir = ".\\individual_stocks_5yr/",
+                           proportion = 20,
+                           root_dir = ".\\dataset\\individual_stocks_5yr/",
                            action_name='AAPL_data',
                            axis='all', normalise = True):
 
@@ -116,7 +117,9 @@ def create_sliding_dataset(pts_window, pts_2_pred = 10,
         #print(action.size())
     train_window, target_train, test_input, test_target = create_Window(action, pts_window, pts_2_pred)
 
-    train_window, target_train, eval_train, eval_target = split_train_eval_sorted(train_window, target_train )
+    train_window, target_train, eval_train, eval_target = split_train_eval_sorted(train_window,
+                                                                                  target_train,
+                                                                                  proportion=proportion )
     print('train_window : ',train_window.size())
     print('target_train : ',target_train.size())
     print('eval_train : ',eval_train.size())

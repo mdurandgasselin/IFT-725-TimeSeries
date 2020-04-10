@@ -120,16 +120,16 @@ def create_sliding_dataset(pts_window, pts_2_pred = 10,
     train_window, target_train, eval_train, eval_target = split_train_eval_sorted(train_window,
                                                                                   target_train,
                                                                                   proportion=proportion )
-    print('train_window : ',train_window.size())
-    print('target_train : ',target_train.size())
-    print('eval_train : ',eval_train.size())
-    print('eval_target : ',eval_target.size())
-    print('test_input : ',test_input.size())
-    print('test_target : ',test_target.size())
+    #print('train_window : ',train_window.size())
+    #print('target_train : ',target_train.size())
+    #print('eval_train : ',eval_train.size())
+    #print('eval_target : ',eval_target.size())
+    #print('test_input : ',test_input.size())
+    #print('test_target : ',test_target.size())
     dataset_train = WindowDataset(train_window, target_train)
     dataset_eval = WindowDataset(eval_train, eval_target)
-    print(len(dataset_eval))
-    print(len(dataset_train))
+    #print(len(dataset_eval))
+    #print(len(dataset_train))
 
     return  dataset_train, dataset_eval, test_input.float(), test_target.float()
 

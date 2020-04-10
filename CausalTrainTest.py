@@ -50,11 +50,11 @@ class TrainManager(object):
             crit = nn.MSELoss()
         return crit
 
-    def train(self, epoch ):
+    def train(self, epoch, display=True, figname='fig' ):
         #loss_epoch = []
         #loss_eval_epoch = []
         for e in range(epoch):
-            print('epoch {}/ {}'.format(e,epoch))
+            #print('epoch {}/ {}'.format(e,epoch))
             losses = []
             for data, target in self.train_dataLoader:
                 N, C, W = data.size()
@@ -80,8 +80,8 @@ class TrainManager(object):
                     losses.append(loss.item())
             self.metrics_epoch['Validation_Loss'].append(np.mean(losses))
             self.model.train()
-
-        self.plot_metrics()
+        if display:
+            self.plot_metrics(figname=figname)
 
 
 
@@ -99,28 +99,30 @@ class TrainManager(object):
         self.model.train()
         return pred
 
-    def plot_metrics(self):
+    def plot_metrics(self, figname='fig'):
         plt.figure()
         plt.plot(self.metrics_epoch['Training_Loss'], label='Training')
         plt.plot(self.metrics_epoch['Validation_Loss'], label='Validation')
         plt.xlabel('Epoch')
-        plt.ylabel('Mean Loss')
+        plt.ylabel('Loss Moyenne')
         plt.legend()
-        plt.savefig('fig_metric.png')
+        plt.savefig(figname+'_metric.png')
         plt.show()
 
-    def plot_prediction(self, input, target, pts_2_pred, save='False', figname = 'fig_prediction.png'):
-        pred = self.predict(input, target)
+    def plot_prediction(self, _input, target, pts_2_pred, save='False', figname = 'fig'):
+        pred = self.predict(_input, target)
         N = self.model.get_pts_for_Pred()
         abscisse = np.arange(0, N + pts_2_pred)
-        data = input.view(N).detach().numpy()
+        data = _input.view(N).detach().numpy()
         target = target.view(pts_2_pred).detach().numpy()
 
         plt.figure()
-        plt.plot(abscisse[:N], data, label='data')
-        plt.plot(abscisse[N:], pred, label='pred')
-        plt.plot(abscisse[N:], target, label='target')
+        plt.plot(abscisse[:N], data, label='Donnée')
+        plt.plot(abscisse[N:], pred, label='Prédiction')
+        plt.plot(abscisse[N:], target, label='Cible')
         plt.legend()
-        plt.savefig(figname)
+        plt.xlabel("Temps (jour)")
+        plt.ylabel('Données normalisés')
+        plt.savefig(figname+'_pred.png')
         plt.show()
 

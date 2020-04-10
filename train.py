@@ -28,15 +28,15 @@ def argument_parser():
                         help="Company's name")
     parser.add_argument('--batch_size', type=int, default=20,
                         help='The size of the training batch')
-    parser.add_argument('--nb_causal_blk', type=int, default=5,
+    parser.add_argument('--nb_causal_blk', type=int, default=8,
                         help='Nb of causal block to tack')
-    parser.add_argument('--nb_filter', type=int, default=16,
+    parser.add_argument('--nb_filter', type=int, default=32,
                         help='Nb of filter to use in SeriesNet')
     parser.add_argument('--nb_drop_blk', type=int, default=2,
                         help='Nb of causal blk where to apply dropout')
     parser.add_argument('--channel_2_use', type=str, default='close', choices=["open", "close","high","low","volume"],
                         help='Channel to use')
-    parser.add_argument('--optimizer', type=str, default="SGD", choices=["Adam", "SGD"],
+    parser.add_argument('--optimizer', type=str, default="sgd", choices=["Adam", "sgd"],
                         help="The optimizer to use for training the model")
     parser.add_argument('--num_epochs', type=int, default=7,
                         help='The number of epochs')
@@ -50,8 +50,8 @@ def argument_parser():
                         help='Learning rate')
     parser.add_argument('--figname', type=str, default='fig1.png',
                         help="Name for saving figures")
-    parser.add_argument('--schuffle', action='store_true',
-                        help='Schuffle or not the dataset between each epoch')
+    parser.add_argument('--shuffle', action='store_true',
+                        help='Shuffle or not the dataset between each epoch')
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -81,9 +81,10 @@ if __name__ == "__main__":
                                                                             action_name=company,
                                                                             axis=channel_2_use,
                                                                             normalise=True)
-    schuffle = args.schuffle
-    train_loader = DataLoader(dataset_train, batch_size=batch_size, shuffle=schuffle, drop_last=False)
-    valid_loader = DataLoader(dataset_eval, batch_size=batch_size, shuffle=schuffle, drop_last=False)
+    shuffle = args.shuffle
+    print(shuffle)
+    train_loader = DataLoader(dataset_train, batch_size=batch_size, shuffle=shuffle, drop_last=False)
+    valid_loader = DataLoader(dataset_eval, batch_size=batch_size, shuffle=shuffle, drop_last=False)
 
     manager = TrainManager(model,
                            train_loader,
@@ -96,7 +97,7 @@ if __name__ == "__main__":
     save = args.save
     figname = args.figname
     print("Training {} for {} epochs".format(model.__class__.__name__, args.num_epochs))
-    manager.train(num_epochs)
+    manager.train(num_epochs, display=True, figname=figname)
     manager.plot_prediction(test_input, test_target, pts_2_pred, save=save, figname=figname)
 
 

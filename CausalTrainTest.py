@@ -50,7 +50,7 @@ class TrainManager(object):
             crit = nn.MSELoss()
         return crit
 
-    def train(self, epoch ):
+    def train(self, epoch , display = True):
         #loss_epoch = []
         #loss_eval_epoch = []
         for e in range(epoch):
@@ -80,8 +80,8 @@ class TrainManager(object):
                     losses.append(loss.item())
             self.metrics_epoch['Validation_Loss'].append(np.mean(losses))
             self.model.train()
-
-        self.plot_metrics()
+        if display:
+            self.plot_metrics()
 
 
 

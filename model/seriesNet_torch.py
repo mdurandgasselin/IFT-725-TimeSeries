@@ -71,6 +71,7 @@ class gated_block(nn.Module):
                                     stride=1, padding=0, dilation=1, groups=1,
                                     bias=True)
         #kernesl size fixed to 1
+        #for commit purpuse
         self.skipout = nn.Conv1d(in_channels=nb_filter, out_channels=in_channels,
                                  kernel_size= 1, stride=1, padding=0, dilation=1,
                                  bias=True)

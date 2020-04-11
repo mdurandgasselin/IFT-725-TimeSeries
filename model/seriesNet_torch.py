@@ -60,7 +60,6 @@ class gated_block(nn.Module):
     def __init__(self, in_channels, nb_filter, dilation=1):
         super(gated_block, self).__init__()
         self.pad_input = nn.ReflectionPad1d((dilation, 0))
-        #add convolutional layer
         #Kernel sizz is fixed to 2 
 
         self.conv = nn.Conv1d(in_channels=in_channels, out_channels=nb_filter,

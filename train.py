@@ -88,10 +88,10 @@ if __name__ == "__main__":
     manager = TrainManager(model,
                            train_loader,
                            valid_loader,
-                           lr=0.001,
+                           lr=learning_rate,
                            loss_fn='MeanSquared',
                            optimizer_type='sgd',
-                           pts_2pred=10)
+                           pts_2pred=pts_2_pred)
 
     save = args.save
     figname = args.figname

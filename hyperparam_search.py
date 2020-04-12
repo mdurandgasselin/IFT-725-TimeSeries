@@ -120,4 +120,4 @@ if __name__ == "__main__":
             else:
                 print('problemo')
 
-    print("Combinaison gagnante : ", max(result, key=result.get))
+    print("Combinaison gagnante : ", min(result, key=result.get))

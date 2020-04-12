@@ -44,31 +44,5 @@ class DataUtils:
         features, target = np.reshape(features, (features.shape[0], features.shape[1], 1)), np.array(target)
         return torch.from_numpy(features), torch.from_numpy(target)
 
-    """
-    def convert_train_val_to_tensor(self, len_val_data=199, batch_size=100):
-        x, y = self.get_feature_target()
-        print("x.shape", x.shape, "y.shape", y.shape)
-        nb_training_data = x.shape[0] - len_val_data
-
-        x_train, y_train = x[:nb_training_data, :, :], y[:nb_training_data]
-        x_val, y_val = x[nb_training_data:, :, :], y[nb_training_data:]
-
-        x_train = torch.from_numpy(x_train).type(torch.Tensor)
-        x_val = torch.from_numpy(x_val).type(torch.Tensor)
-        y_train = torch.from_numpy(y_train).type(torch.Tensor)
-        y_val = torch.from_numpy(y_val).type(torch.Tensor)
-
-        train = torch.utils.data.TensorDataset(x_train, y_train)
-        val = torch.utils.data.TensorDataset(x_val, y_val)
-
-        train_loader = torch.utils.data.DataLoader(dataset=train, batch_size=batch_size, shuffle=False)
-        validation_loader = torch.utils.data.DataLoader(dataset=val, batch_size=batch_size, shuffle=False)
-
-        return train_loader, validation_loader
-    """
-"""
-data_utils = DataUtils()
-data_utils.read_data()
-features, target = data_utils.get_features_target()
-print(features.size())
-"""
+   
+ 

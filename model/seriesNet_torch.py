@@ -53,21 +53,24 @@ class seriesNet(nn.Module):
         return self.pts_need_for_pred
 
 
-
+# class handling gated blocks
+# 
 class gated_block(nn.Module):
     # Param : nb_filter, filter_length, dilation, l2_layer_reg
     def __init__(self, in_channels, nb_filter, dilation=1):
         super(gated_block, self).__init__()
         self.pad_input = nn.ReflectionPad1d((dilation, 0))
-        
+        #Kernel sizz is fixed to 2 
+
         self.conv = nn.Conv1d(in_channels=in_channels, out_channels=nb_filter,
                               kernel_size= 2, stride=1, padding=0,
                               dilation=dilation, bias=True, padding_mode='reflect')
-        
+        #kernesl size fixed to 1
         self.network_in = nn.Conv1d(in_channels=nb_filter, out_channels=in_channels, kernel_size= 1,
                                     stride=1, padding=0, dilation=1, groups=1,
                                     bias=True)
-        
+        #kernesl size fixed to 1
+        #for commit purpuse
         self.skipout = nn.Conv1d(in_channels=nb_filter, out_channels=in_channels,
                                  kernel_size= 1, stride=1, padding=0, dilation=1,
                                  bias=True)

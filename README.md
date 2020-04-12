@@ -8,9 +8,13 @@ The project was developed on python 3.6 on Ubuntu 18.04. So for running the proj
 
 ## Running
 
-* if you want to try ARIMA you have to go to execution/arima.ipynb
+* if you want to try ARIMA or LSTM then do :
 
-* if you want to try LSTM you have to go to execution/lstm.ipynb
+```
+$ jupyter notebook
+```
+
+and go to the "execution" directory to see arima.ipynb or lstm.ipynb
 
 * if you want to try SeriesNet you have to do :
 
@@ -19,6 +23,7 @@ For training
 ```
 $ python train.py --company=APPL_data --num_epochs=7 --pts_2_pred=20 --nb_bloc_causal=6
 ```
+
 For hyperparameter search
 
 ```

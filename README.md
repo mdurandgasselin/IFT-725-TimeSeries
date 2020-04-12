@@ -32,4 +32,4 @@ $ python hyperparam_search.py --company=AAPL_data --nb_causal_blk 5 6 7  --nb_fi
 
 ## Writing
 
-We also write a report that comes with the code.
+We also write a [report](IFT725_Rapport_de_projet_DEEP_LEARNING.pdf) that comes with the code.

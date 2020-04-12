@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 
 def create_sliding_dataset(pts_window, pts_2_pred = 10,
                            proportion = 20,
-                           root_dir = ".\\dataset\\individual_stocks_5yr/",
+                           root_dir = "./dataset/sandp500/individual_stocks_5yr/individual_stocks_5yr/",
                            action_name='AAPL_data',
                            axis='all', normalise = True):
 

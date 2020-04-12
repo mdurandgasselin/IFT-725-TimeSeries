@@ -21,7 +21,7 @@ and go to the "execution" directory to see arima.ipynb or lstm.ipynb
 For training
 
 ```
-$ python train.py --company=APPL_data --num_epochs=7 --pts_2_pred=20 --nb_bloc_causal=6
+$ python train.py --company=AAPL_data --num_epochs=7 --pts_2_pred=20 --nb_causal_blk=6
 ```
 
 For hyperparameter search

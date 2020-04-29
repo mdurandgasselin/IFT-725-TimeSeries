@@ -21,7 +21,7 @@ and go to the "execution" directory to see arima.ipynb or lstm.ipynb
 For training
 
 ```
-$ python train.py --company=APPL_data --num_epochs=7 --pts_2_pred=20 --nb_bloc_causal=6
+$ python train.py --company=AAPL_data --num_epochs=7 --pts_2_pred=20 --nb_causal_blk=6
 ```
 
 For hyperparameter search
@@ -32,4 +32,4 @@ $ python hyperparam_search.py --company=AAPL_data --nb_causal_blk 5 6 7  --nb_fi
 
 ## Writing
 
-We also write a report that comes with the code.
+We also write a [report](IFT725_Rapport_de_projet_DEEP_LEARNING.pdf) that comes with the code.
